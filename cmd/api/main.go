@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/tiskae/go-social/internal/store"
 )
 
 func main() {
@@ -20,8 +21,11 @@ func main() {
 		addr: PORT,
 	}
 
+	storage := store.NewStorage(nil)
+
 	application := application{
 		config: cfg,
+		store: storage,
 	}
 
 	mux := application.mount()
