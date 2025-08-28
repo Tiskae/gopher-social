@@ -2,9 +2,10 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/tiskae/go-social/internal/db"
+	"github.com/tiskae/go-social/internal/env"
 	"github.com/tiskae/go-social/internal/store"
 )
 
@@ -15,17 +16,34 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	PORT := os.Getenv("PORT");
+	PORT := env.GetString("PORT", ":8080")
 
 	cfg := config{
 		addr: PORT,
+		db: dbConfig{
+			addr:         env.GetString("DB_ADDR", "postgres://user:adminpassword@localhost/social?sslmode=disable"),
+			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
+			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
+			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15min"),
+		},
 	}
 
-	storage := store.NewStorage(nil)
+	db, err := db.New(
+		cfg.db.addr,
+		cfg.db.maxOpenConns,
+		cfg.db.maxIdleConns,
+		cfg.db.maxIdleTime,
+	)
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	storage := store.NewStorage(db)
 
 	application := application{
 		config: cfg,
-		store: storage,
+		store:  storage,
 	}
 
 	mux := application.mount()
