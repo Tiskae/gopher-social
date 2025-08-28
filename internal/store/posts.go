@@ -27,8 +27,9 @@ func (s *PostStore) Create(ctx context.Context, post *Post) error {
 		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
 	`
 
-	err := s.db.QueryRowContext(
-		ctx, query, post.Content, post.Title, pq.Array(post.Tags), post.UserID).
+	err := s.db.
+		QueryRowContext(
+			ctx, query, post.Content, post.Title, pq.Array(post.Tags), post.UserID).
 		Scan(&post.ID, &post.CreatedAt, &post.UpdatedAt)
 
 	if err != nil {
