@@ -9,6 +9,8 @@ import (
 	"github.com/tiskae/go-social/internal/store"
 )
 
+const VERSION = "0.0.1"
+
 func main() {
 	// Load env file
 	err := godotenv.Load()
@@ -26,6 +28,8 @@ func main() {
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
+		env:     env.GetString("ENV", "development"),
+		version: VERSION,
 	}
 
 	db, err := db.New(
@@ -40,7 +44,7 @@ func main() {
 	}
 
 	defer db.Close()
-	log.Println("database connection pool established")
+	log.Println("Database connection pool established")
 
 	storage := store.NewStorage(db)
 
