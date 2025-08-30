@@ -40,7 +40,7 @@ func main() {
 	}
 
 	defer db.Close()
-	log.Println("database connection pool established")
+	log.Println("Database connection pool established")
 
 	storage := store.NewStorage(db)
 
