@@ -5,8 +5,13 @@ import (
 )
 
 func (a *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Health is excellent!"))
+	data := map[string]string{
+		"status":  "Health is excellent",
+		"env":     a.config.env,
+		"version": a.config.version,
+	}
 
-	// a.store.Posts.Create(r.Context())
+	if err := writeJSON(w, http.StatusOK, data); err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+	}
 }
