@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -43,17 +44,22 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) getPostByIdHandler(w http.ResponseWriter, r *http.Request) {
-	postId, err := strconv.Atoi(chi.URLParam(r, "id"))
+	postId, err := strconv.Atoi(chi.URLParam(r, "postID"))
 
 	if err != nil {
 		writeJSONError(w, http.StatusBadRequest, "post id is required as a valid integer")
 		return
 	}
 
-	post, err := app.store.Posts.GetById(r.Context(), postId)
+	post, err := app.store.Posts.GetByID(r.Context(), postId)
 
 	if err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		switch {
+		case errors.Is(err, store.ErrNotFound):
+			writeJSONError(w, http.StatusNotFound, err.Error())
+		default:
+			writeJSONError(w, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 
