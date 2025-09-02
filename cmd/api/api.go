@@ -29,7 +29,7 @@ type dbConfig struct {
 	maxIdleTime  string
 }
 
-func (a *application) mount() http.Handler {
+func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 
 	// A good base middleware stack
@@ -45,7 +45,11 @@ func (a *application) mount() http.Handler {
 
 	// Routes
 	r.Route("/v1", func(r chi.Router) {
-		r.Get("/health", a.healthCheckHandler)
+		r.Get("/health", app.healthCheckHandler)
+
+		r.Route("/posts", func(r chi.Router) {
+			r.Post("/", app.createPostHandler)
+		})
 	})
 
 	return r
