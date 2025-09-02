@@ -8,7 +8,7 @@ import (
 func (app *application) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
 	log.Printf("internal server error: method: %s, path %s, error: %s", r.Method, r.URL.Path, err.Error())
 
-	writeJSONError(w, http.StatusInternalServerError, "intenal server error")
+	writeJSONError(w, http.StatusInternalServerError, "internal server error")
 }
 
 func (app *application) badRequestError(w http.ResponseWriter, r *http.Request, err error) {
