@@ -51,7 +51,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Request) {
-	postID, err := strconv.Atoi(chi.URLParam(r, "postID"))
+	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 
 	if err != nil {
 		app.badRequestError(w, r, errors.New("post id is required as a valid integer"))
@@ -69,6 +69,14 @@ func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Reques
 		}
 		return
 	}
+
+	comments, err := app.store.Comments.GetByPostID(r.Context(), postID)
+
+	if err != nil {
+		app.internalServerError(w, r, err)
+	}
+
+	post.Comments = comments
 
 	if err := writeJSON(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
