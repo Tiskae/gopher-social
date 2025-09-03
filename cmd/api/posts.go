@@ -44,15 +44,15 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (app *application) getPostByIdHandler(w http.ResponseWriter, r *http.Request) {
-	postId, err := strconv.Atoi(chi.URLParam(r, "postID"))
+func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Request) {
+	postID, err := strconv.Atoi(chi.URLParam(r, "postID"))
 
 	if err != nil {
 		app.badRequestError(w, r, errors.New("post id is required as a valid integer"))
 		return
 	}
 
-	post, err := app.store.Posts.GetByID(r.Context(), postId)
+	post, err := app.store.Posts.GetByID(r.Context(), postID)
 
 	if err != nil {
 		switch {

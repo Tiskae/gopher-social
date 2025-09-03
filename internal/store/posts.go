@@ -1,3 +1,4 @@
+// Package store provides data access and storage functionality for posts and related entities.
 package store
 
 import (
@@ -45,7 +46,7 @@ func (s *PostStore) GetByID(ctx context.Context, postID int) (Post, error) {
 		SELECT id, content,  title, tags, user_id, created_at, updated_at FROM posts WHERE posts.id = $1
 	`
 
-	var post Post = Post{}
+	var post = Post{}
 
 	err := s.db.QueryRowContext(ctx, query, postID).Scan(
 		&post.ID, &post.Content, &post.Title, pq.Array(&post.Tags), &post.UserID, &post.CreatedAt, &post.UpdatedAt,
