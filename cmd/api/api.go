@@ -51,7 +51,11 @@ func (app *application) mount() http.Handler {
 			r.Post("/", app.createPostHandler)
 
 			r.Route("/{postID}", func(r chi.Router) {
-				r.Get("/", app.getPostByIdHandler)
+				r.Get("/", app.getPostByIDHandler)
+
+				r.Route("/comments", func(r chi.Router) {
+					r.Get("/", app.getCommentsByPostIDHandler)
+				})
 			})
 		})
 	})
@@ -59,16 +63,16 @@ func (app *application) mount() http.Handler {
 	return r
 }
 
-func (a *application) run(mux http.Handler) error {
+func (app *application) run(mux http.Handler) error {
 
 	srv := &http.Server{
-		Addr:         a.config.addr,
+		Addr:         app.config.addr,
 		Handler:      mux,
 		WriteTimeout: time.Second * 30,
 		ReadTimeout:  time.Second * 10,
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("server running at %s", a.config.addr)
+	log.Printf("server running at %s", app.config.addr)
 	return srv.ListenAndServe()
 }
