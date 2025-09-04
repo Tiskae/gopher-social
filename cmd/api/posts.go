@@ -113,9 +113,9 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 }
 
 type UpdatePostPayload struct {
-	Title   string   `json:"title" validate:"max=100"`
-	Content string   `json:"content" validate:"max=1000"`
-	Tags    []string `json:"tags" validate:"dive,required"`
+	Title   string   `json:"title" validate:"required,max=100"`
+	Content string   `json:"content" validate:"required,max=1000"`
+	Tags    []string `json:"tags" validate:"required,dive,required"`
 }
 
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -127,9 +127,9 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var updatedPost store.Post
+	var payload UpdatePostPayload
 
-	err = readJSON(w, r, updatedPost)
+	err = readJSON(w, r, &payload)
 
 	// handling bad payload
 	if err != nil {
@@ -137,19 +137,32 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = Validate.Struct(updatedPost)
+	err = Validate.Struct(payload)
 
 	// handling payload validation error
 	if err != nil {
 		app.badRequestError(w, r, err)
 	}
 
+	updatedPost := store.Post{
+		ID:      postID,
+		Title:   payload.Title,
+		Content: payload.Content,
+		Tags:    payload.Tags,
+	}
+
 	err = app.store.Posts.UpdateOne(r.Context(), postID, &updatedPost)
 
-	// habdling failed update
+	// handling failed update
 	if err != nil {
-		app.internalServerError(w, r, err)
-		return
+		switch {
+		case errors.Is(err, store.ErrNotFound):
+			app.notFoundError(w, r, err)
+			return
+		default:
+			app.internalServerError(w, r, err)
+			return
+		}
 	}
 
 	if err = writeJSON(w, http.StatusOK, updatedPost); err != nil {

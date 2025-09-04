@@ -90,5 +90,29 @@ func (s *PostStore) Delete(ctx context.Context, postID int64) error {
 }
 
 func (s *PostStore) UpdateOne(ctx context.Context, postID int64, updatedPost *Post) error {
+	query := `
+		UPDATE posts
+		SET
+			title = $2,
+			content = $3,
+			tags = $4
+		WHERE id = $1
+		RETURNING title, content, tags, user_id, created_at, updated_at
+	`
+
+	err := s.db.QueryRowContext(
+		ctx, query, postID, updatedPost.Title, updatedPost.Content, pq.Array(updatedPost.Tags)).
+		Scan(&updatedPost.Title, &updatedPost.Content, pq.Array(&updatedPost.Tags),
+			&updatedPost.UserID, &updatedPost.CreatedAt, &updatedPost.UpdatedAt)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
 	return nil
 }
