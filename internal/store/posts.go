@@ -64,3 +64,31 @@ func (s *PostStore) GetByID(ctx context.Context, postID int64) (Post, error) {
 
 	return post, nil
 }
+
+func (s *PostStore) Delete(ctx context.Context, postID int64) error {
+	query := `
+		DELETE from posts WHERE id = $1
+	`
+
+	result, err := s.db.ExecContext(ctx, query, postID)
+
+	if err != nil {
+		return err
+	}
+
+	rowsDeleted, err := result.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	if rowsDeleted == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (s *PostStore) UpdateOne(ctx context.Context, postID int64, updatedPost *Post) error {
+	return nil
+}
