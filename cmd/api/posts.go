@@ -1,13 +1,19 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/tiskae/go-social/internal/store"
 )
+
+type PostKey string
+
+const postKey PostKey = "post"
 
 type CreatePostPayload struct {
 	Title   string   `json:"title" validate:"required,max=100"`
@@ -51,32 +57,13 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Request) {
-	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
+	post := getPostFromCtx(r)
 
-	if err != nil {
-		app.badRequestError(w, r, errors.New("post id is required as a valid integer"))
+	// handling absent post from ctx
+	if post == nil {
+		app.internalServerError(w, r, errors.New("post not fetched"))
 		return
 	}
-
-	post, err := app.store.Posts.GetByID(r.Context(), postID)
-
-	if err != nil {
-		switch {
-		case errors.Is(err, store.ErrNotFound):
-			app.notFoundError(w, r, err)
-		default:
-			app.internalServerError(w, r, err)
-		}
-		return
-	}
-
-	comments, err := app.store.Comments.GetByPostID(r.Context(), postID)
-
-	if err != nil {
-		app.internalServerError(w, r, err)
-	}
-
-	post.Comments = comments
 
 	if err := writeJSON(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
@@ -113,9 +100,9 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 }
 
 type UpdatePostPayload struct {
-	Title   string   `json:"title" validate:"required,max=100"`
-	Content string   `json:"content" validate:"required,max=1000"`
-	Tags    []string `json:"tags" validate:"required,dive,required"`
+	Title   *string   `json:"title" validate:"omitempty,max=100"`
+	Content *string   `json:"content" validate:"omitempty,max=1000"`
+	Tags    *[]string `json:"tags" validate:"omitempty,dive,required"`
 }
 
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -124,6 +111,14 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 	// handling invalid or empty postID
 	if err != nil {
 		app.badRequestError(w, r, errors.New("post id is required as a valid integer"))
+		return
+	}
+
+	post := getPostFromCtx(r)
+
+	// handling failed post fetch from ctx
+	if post == nil {
+		app.internalServerError(w, r, errors.New("post not fetched"))
 		return
 	}
 
@@ -144,14 +139,17 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		app.badRequestError(w, r, err)
 	}
 
-	updatedPost := store.Post{
-		ID:      postID,
-		Title:   payload.Title,
-		Content: payload.Content,
-		Tags:    payload.Tags,
+	if payload.Title != nil {
+		post.Title = *payload.Title
+	}
+	if payload.Content != nil {
+		post.Content = *payload.Content
+	}
+	if payload.Tags != nil {
+		post.Tags = *payload.Tags
 	}
 
-	err = app.store.Posts.UpdateOne(r.Context(), postID, &updatedPost)
+	err = app.store.Posts.UpdateOne(r.Context(), postID, post)
 
 	// handling failed update
 	if err != nil {
@@ -165,8 +163,58 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	if err = writeJSON(w, http.StatusOK, updatedPost); err != nil {
+	if err = writeJSON(w, http.StatusOK, post); err != nil {
 		// handling failed JSON write
 		app.internalServerError(w, r, err)
 	}
+}
+
+func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip this middleware for /comments route
+		if strings.HasPrefix(r.URL.Path, "/comments") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
+
+		// handling invalid of missing postID
+		if err != nil {
+			app.badRequestError(w, r, errors.New("post id is required as a valid integer"))
+			return
+		}
+
+		post, err := app.store.Posts.GetByID(r.Context(), postID)
+
+		if err != nil {
+			switch {
+			case errors.Is(err, store.ErrNotFound): // post not found
+				app.notFoundError(w, r, err)
+			default:
+				app.internalServerError(w, r, err) // other error
+			}
+			return
+		}
+
+		comments, err := app.store.Comments.GetByPostID(r.Context(), postID)
+
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		post.Comments = comments
+
+		// injecting fetched post (with comments) into the request context
+		newCtx := context.WithValue(r.Context(), postKey, &post)
+
+		// calling the next handlerFunc
+		next.ServeHTTP(w, r.WithContext(newCtx))
+	})
+}
+
+func getPostFromCtx(r *http.Request) *store.Post {
+	post := r.Context().Value(postKey).(*store.Post)
+	return post
 }
