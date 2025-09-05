@@ -51,6 +51,8 @@ func (app *application) mount() http.Handler {
 			r.Post("/", app.createPostHandler)
 
 			r.Route("/{postID}", func(r chi.Router) {
+				// TO-DO: only use the middleware for endpoints that need it
+				r.Use(app.postsContextMiddleware) // excluded for /comments route internally
 				r.Get("/", app.getPostByIDHandler)
 				r.Delete("/", app.deletePostHandler)
 				r.Patch("/", app.updatePostHandler)

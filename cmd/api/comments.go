@@ -30,7 +30,7 @@ func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *htt
 		}
 	}
 
-	if err = writeJSON(w, http.StatusOK, comments); err != nil {
+	if err = app.jsonWrite(w, http.StatusOK, comments); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
