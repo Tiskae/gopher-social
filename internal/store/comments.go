@@ -22,7 +22,7 @@ func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]Comment
 	query := `
 		SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, u.username, u.id
 		FROM comments c
-		LEFT JOIN users u ON c.user_id = u.id
+		INNER JOIN users u ON c.user_id = u.id
 		WHERE c.post_id = $1
 		ORDER BY c.created_at
 	`
