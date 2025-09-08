@@ -38,14 +38,6 @@ func (app *application) createPostCommentHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// userID, err := strconv.ParseInt(payload.UserID, 10, 64)
-
-	// handling failed payload validation on userID
-	if err != nil {
-		app.badRequestError(w, r, err)
-		return
-	}
-
 	comment := store.Comment{
 		PostID:  postID,
 		UserID:  payload.UserID,
