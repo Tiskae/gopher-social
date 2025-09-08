@@ -1,4 +1,4 @@
-// seed for DB
+// Package db: for seeding the DB
 package db
 
 import (
