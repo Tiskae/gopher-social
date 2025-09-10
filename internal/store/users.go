@@ -46,6 +46,9 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (User, error) {
 
 	user := User{}
 
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	err := s.db.QueryRowContext(ctx, query, userID).Scan(
 		&user.ID,
 		&user.Username,
