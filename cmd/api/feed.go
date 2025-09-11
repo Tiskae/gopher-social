@@ -1,13 +1,35 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/tiskae/go-social/internal/store"
+)
 
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: paginatio, filters, searching?
+
+	fq := store.PaginatedFeedQuery{
+		Limit:  20,
+		Offset: 0,
+		Sort:   "desc",
+	}
+
+	fq, err := fq.Parse(r)
+	if err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	err = Validate.Struct(fq)
+
+	if err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
 
 	ctx := r.Context()
 
-	feed, err := app.store.Posts.GetUserFeed(ctx, int64(99)) // TODO: replace with authctd userID
+	feed, err := app.store.Posts.GetUserFeed(ctx, int64(99), fq) // TODO: replace with authctd userID
 
 	if err != nil {
 		app.internalServerError(w, r, err)

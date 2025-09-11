@@ -31,7 +31,7 @@ type PostStore struct {
 	db *sql.DB
 }
 
-func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMetadata, error) {
+func (s *PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedFeedQuery) ([]PostWithMetadata, error) {
 	query := `
 		SELECT
 			p.id, p.user_id, p.title, p.content, p.created_at, p.tags,
@@ -45,8 +45,10 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMe
 			OR p.user_id = $1
 			WHERE f.user_id = $1 OR p.user_id = $1
 		GROUP BY
-			p.id,u.id
-		ORDER BY p.created_at DESC
+			p.id, u.id
+		ORDER BY p.created_at ` + fq.Sort +
+		` OFFSET $2
+		LIMIT $3;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -54,7 +56,7 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMe
 
 	var feedPosts []PostWithMetadata
 
-	rows, err := s.db.QueryContext(ctx, query, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID, fq.Offset, fq.Limit)
 
 	if err != nil {
 		return feedPosts, err
