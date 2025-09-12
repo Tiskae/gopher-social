@@ -73,26 +73,15 @@ var contentsData = []string{
 }
 
 var tagsData = []string{
-	"coding, golang, backend, api, database, sql",
-	"productivity, habits, focus, mindset, growth, success",
-	"travel, adventure, lifestyle, culture, exploration, photography",
-	"ai, technology, future, innovation, automation, machine-learning",
-	"reading, books, learning, knowledge, education, curiosity",
-	"minimalism, clarity, design, simplicity, organization, creativity",
-	"career, growth, skills, jobs, opportunities, development",
-	"docker, devops, containers, kubernetes, cloud, infrastructure",
-	"health, fitness, balance, wellness, meditation, nutrition",
-	"motivation, discipline, success, consistency, goals, inspiration",
-	"creativity, design, art, imagination, storytelling, expression",
-	"remote-work, digital-nomad, freedom, flexibility, travel, worklife",
-	"education, lifelong-learning, knowledge, skills, improvement, training",
-	"failure, resilience, persistence, patience, grit, comeback",
-	"gratitude, mindfulness, wellbeing, peace, positivity, happiness",
-	"sleep, energy, performance, focus, rest, recovery",
-	"public-speaking, communication, confidence, leadership, influence, growth",
-	"open-source, community, collaboration, contribution, projects, coding",
-	"hiking, outdoors, nature, mountains, camping, adventure",
-	"startups, side-hustle, entrepreneurship, business, innovation, creativity",
+	"coding", "golang", "backend", "api", "database", "sql",
+	"productivity", "habits", "focus", "mindset", "growth", "success",
+	"travel", "adventure", "lifestyle", "culture", "exploration", "photography",
+	"ai", "technology", "future", "innovation", "automation", "machine-learning",
+	"reading", "books", "learning", "knowledge", "education", "curiosity",
+	"minimalism", "clarity", "design", "simplicity", "organization", "creativity",
+	"career", "growth", "skills", "jobs", "opportunities", "development",
+	"docker", "devops", "containers", "kubernetes", "cloud", "infrastructure",
+	"health", "fitness", "balance", "wellness", "meditation", "nutrition",
 }
 
 var commentsData = []string{
