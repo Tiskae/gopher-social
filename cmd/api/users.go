@@ -17,7 +17,7 @@ const userKey UserContextKey = "user"
 func (app *application) getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r)
 
-	if err := app.jsonWrite(w, http.StatusOK, user); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
@@ -57,7 +57,7 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	if err := app.jsonWrite(w, http.StatusNoContent, nil); err != nil {
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
@@ -89,7 +89,7 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	if err := app.jsonWrite(w, http.StatusNoContent, nil); err != nil {
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }

@@ -52,7 +52,7 @@ func (app *application) createPostCommentHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if err := app.jsonWrite(w, http.StatusCreated, comment); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, comment); err != nil {
 		app.internalServerError(w, r, err)
 	}
 
@@ -79,7 +79,7 @@ func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *htt
 		}
 	}
 
-	if err = app.jsonWrite(w, http.StatusOK, comments); err != nil {
+	if err = app.jsonResponse(w, http.StatusOK, comments); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
