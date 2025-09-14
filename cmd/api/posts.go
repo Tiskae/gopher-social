@@ -21,6 +21,20 @@ type CreatePostPayload struct {
 	Tags    []string `json:"tags"`
 }
 
+// CreatePost godoc
+//
+//	@Summary		Create a post
+//	@Description	Create a post for the user with the auth token
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			title	body		string		true	"Post title"	maxlength(100)
+//	@Param			content	body		string		true	"Post content"	maxlength(1000)
+//	@Param			tags	body		[]string	false	"Post tags"
+//	@Success		201		{object}	store.Post
+//	@Failure		400		{string}	error	"Invalid body"
+//	@Failure		500		{string}	error	"Internal server error"
+//	@Router			/posts [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
 
@@ -56,6 +70,18 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// GetPostByID godoc
+//
+//	@Summary		Fetches a post
+//	@Description	Fetches a post by ID
+//	@Tags			posts
+//	@Produce		json
+//	@Param			id	path		int	true	"Post ID"
+//	@Success		200	{object}	store.Post
+//	@Failure		400	{string}	error	"Invalid post ID"
+//	@Failure		404	{string}	error	"post not found"
+//	@Failure		500	{string}	error	"Internal server error"
+//	@Router			/posts/{id} [get]
 func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 
@@ -70,6 +96,18 @@ func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// DeletePost godoc
+//
+//	@Summary		Delete a post
+//	@Description	Delete the post with the ID provided
+//	@Tags			posts
+//	@Produce		json
+//	@Param			id	path		int	true	"ID of the user to follow"
+//	@Success		200	{object}	interface{}
+//	@Failure		400	{string}	error	"Invalid post ID"
+//	@Failure		404	{string}	error	"Post not found"
+//	@Failure		500	{string}	error	"Internal server error"
+//	@Router			/posts/{id} [delete]
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 
@@ -105,6 +143,22 @@ type UpdatePostPayload struct {
 	Tags    *[]string `json:"tags" validate:"omitempty,dive,required"`
 }
 
+// godoc UpdatePost
+//
+//	@Summary		Update a post
+//	@Description	Update a post with the post body
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int			true	"Post ID"
+//	@Param			title	body		string		false	"Post title"	maxlength(100)
+//	@Param			content	body		string		false	"Post body"		maxlength(1000)
+//	@Param			tags	body		[]string	false	"Post tags"
+//	@Success		200		{object}	store.Post
+//	@Failure		400		{string}	error	"Invalid body"
+//	@Failure		404		{string}	error	"Post not found"
+//	@Failure		500		{string}	error	"Internal server error"
+//	@Router			/posts/{id} [patch]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 

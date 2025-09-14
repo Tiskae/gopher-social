@@ -14,6 +14,18 @@ type UserContextKey string
 
 const userKey UserContextKey = "user"
 
+// GetUserByID godoc
+//
+//	@Summary		Fetches a user profile
+//	@Description	Fetches a user profile by ID
+//	@Tags			users
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	store.User
+//	@Failure		400	{string}	error	"Invalid user ID"
+//	@Failure		404	{string}	error	"User not found"
+//	@Failure		500	{string}	error	"Internal server error"
+//	@Router			/users/{id} [get]
 func (app *application) getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r)
 
@@ -26,6 +38,19 @@ type FollowPayload struct {
 	UserID int64 `json:"user_id" validate:"required"`
 }
 
+// FollowUser godoc
+//
+//	@Summary		Follow a user
+//	@Description	Follow a user with the ID provided
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			user_id	body		int		true	"ID of the user to follow"
+//	@Success		204		{nil}		nil		"User followed successfully"
+//	@Failure		400		{string}	error	"Invalid user ID"
+//	@Failure		404		{string}	error	"User not found"
+//	@Failure		500		{string}	error	"Internal server error"
+//	@Router			/users/{user_id}/follow [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	userToFollow := getUserFromContext(r)
 
@@ -62,6 +87,19 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// UnfollowUser godoc
+//
+//	@Summary		Unfollow a user
+//	@Description	Unfollow a user with the ID provided
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			user_id	body		int		true	"ID of the user to unfollow"
+//	@Success		204		{nil}		nil		"User unfollowed successfully"
+//	@Failure		400		{string}	error	"Invalid user ID"
+//	@Failure		404		{string}	error	"User not found"
+//	@Failure		500		{string}	error	"Internal server error"
+//	@Router			/users/{user_id}/unfollow [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	userToUnfollow := getUserFromContext(r)
 

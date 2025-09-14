@@ -14,6 +14,19 @@ type CreateCommentPayload struct {
 	Content string `json:"content" validate:"required"`
 }
 
+// CreateComment godoc
+//
+//	@Summary		Create a comment
+//	@Description	Create a new comment
+//	@Tags			comments
+//	@Produce		json
+//	@Param			post_id	path		int		true	"Post ID"
+//	@Param			user_id	body		int		true	"User ID"
+//	@Param			content	body		string	true	"Comment content"
+//	@Success		201		{object}	store.Comment
+//	@Failure		400		{string}	error	"Invalid body"
+//	@Failure		500		{string}	error	"Internal server error"
+//	@Router			/posts/{post_id}/comments [post]
 func (app *application) createPostCommentHandler(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 
@@ -58,6 +71,18 @@ func (app *application) createPostCommentHandler(w http.ResponseWriter, r *http.
 
 }
 
+// GetPostComments godoc
+//
+//	@Summary		Get post comments
+//	@Description	Create a new comment
+//	@Tags			comments
+//	@Produce		json
+//	@Param			post_id	path		int	true	"Post ID"
+//	@Success		200		{object}	[]store.Comment
+//	@Failure		400		{string}	error	"Invalid post ID"
+//	@Failure		404		{string}	error	"Post not found"
+//	@Failure		500		{string}	error	"Internal server error"
+//	@Router			/posts/id/comments [get]
 func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 
