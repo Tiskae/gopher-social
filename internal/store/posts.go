@@ -41,9 +41,10 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedF
 			posts p
 			LEFT JOIN comments c ON p.id = c.post_id
 			LEFT JOIN users u ON u.id = p.user_id
-			INNER JOIN followers f ON p.user_id = f.follower_id
-			OR p.user_id = $1
-			WHERE f.user_id = $1 OR p.user_id = $1
+			INNER JOIN followers f ON p.user_id = f.follower_id OR p.user_id = $1
+		WHERE (f.user_id = $1 OR p.user_id = $1) AND
+			(p.title ILIKE '%' || $4 || '%' OR p.content ILIKE '%' || $4 || '%') AND
+			($5 = '{}' OR p.tags @> $5::TEXT[])
 		GROUP BY
 			p.id, u.id
 		ORDER BY p.created_at ` + fq.Sort +
@@ -56,8 +57,7 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedF
 
 	var feedPosts []PostWithMetadata
 
-	rows, err := s.db.QueryContext(ctx, query, userID, fq.Offset, fq.Limit)
-
+	rows, err := s.db.QueryContext(ctx, query, userID, fq.Offset, fq.Limit, fq.Search, pq.Array(fq.Tags))
 	if err != nil {
 		return feedPosts, err
 	}

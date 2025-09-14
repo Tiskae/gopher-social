@@ -1,0 +1,2 @@
+ALTER TABLE posts
+ALTER COLUMN tags VARCHAR[];
