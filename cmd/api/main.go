@@ -1,12 +1,11 @@
 package main
 
 import (
-	"log"
-
 	"github.com/joho/godotenv"
 	"github.com/tiskae/go-social/internal/db"
 	"github.com/tiskae/go-social/internal/env"
 	"github.com/tiskae/go-social/internal/store"
+	"go.uber.org/zap"
 )
 
 const VERSION = "0.0.1"
@@ -31,10 +30,14 @@ const VERSION = "0.0.1"
 //	@description
 
 func main() {
+	// Logger
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer logger.Sync()
+
 	// Load env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		logger.Fatal("Error loading .env file")
 	}
 
 	PORT := env.GetString("PORT", ":8080")
@@ -52,6 +55,7 @@ func main() {
 		version: VERSION,
 	}
 
+	// Database
 	db, err := db.New(
 		cfg.db.addr,
 		cfg.db.maxOpenConns,
@@ -60,20 +64,21 @@ func main() {
 	)
 
 	if err != nil {
-		log.Panic(err)
+		logger.Fatal(err)
 	}
 
 	defer db.Close()
-	log.Println("Database connection pool established")
+	logger.Info("database has connected")
 
 	storage := store.NewStorage(db)
 
 	application := application{
 		config: cfg,
 		store:  storage,
+		logger: logger,
 	}
 
 	mux := application.mount()
 
-	log.Fatal(application.run(mux))
+	logger.Fatal(application.run(mux))
 }
