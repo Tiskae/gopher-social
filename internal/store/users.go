@@ -4,14 +4,34 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID        int64  `json:"id"`
-	Username  string `json:"username"`
-	Email     string `json:"email,omitempty"`
-	Password  string `json:"-"`
-	CreatedAt string `json:"created_at,omitempty"`
+	ID        int64    `json:"id"`
+	Username  string   `json:"username"`
+	Email     string   `json:"email,omitempty"`
+	Password  Password `json:"-"`
+	CreatedAt string   `json:"created_at,omitempty"`
+}
+
+type Password struct {
+	text string
+	hash []byte
+}
+
+func (p *Password) Set(value string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(value), bcrypt.DefaultCost)
+
+	if err != nil {
+		return err
+	}
+
+	p.text = value
+	p.hash = hash
+
+	return nil
 }
 
 type UserStore struct {
@@ -28,7 +48,7 @@ func (s *UserStore) Create(ctx context.Context, user *User) error {
 	defer cancel()
 
 	err := s.db.
-		QueryRowContext(ctx, query, user.Username, user.Email, user.Password).
+		QueryRowContext(ctx, query, user.Username, user.Email, user.Password.hash).
 		Scan(&user.ID, &user.CreatedAt)
 
 	if err != nil {

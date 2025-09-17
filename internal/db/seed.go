@@ -146,8 +146,9 @@ func generateUsers(num int) []*store.User {
 		newUser := &store.User{
 			Username: usernamesData[rndIdx] + strconv.Itoa(i),
 			Email:    usernamesData[rndIdx] + strconv.Itoa(i) + "@example.com",
-			Password: "123123",
 		}
+
+		newUser.Password.Set("123123")
 
 		users = append(users, newUser)
 	}
