@@ -58,6 +58,11 @@ func (s *UserStore) Create(ctx context.Context, user *User) error {
 	return nil
 }
 
+func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token string) error {
+	// do soemthing
+	return nil
+}
+
 func (s *UserStore) GetByID(ctx context.Context, userID int64) (User, error) {
 	query := `
 		SELECT id, username, email, password, created_at FROM users
