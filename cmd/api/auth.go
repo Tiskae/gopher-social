@@ -47,7 +47,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := app.store.Users.Create(r.Context(), &user); err != nil {
+	if err := app.store.Users.CreateAndInvite(r.Context(), &user, "uuidv4"); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
