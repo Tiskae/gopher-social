@@ -431,6 +431,47 @@
                 }
             }
         },
+        "/users/activate/{token}": {
+            "put": {
+                "description": "Activate/Register a user by invitation toke",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Activate/Register a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invitation token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User activated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/users/feed": {
             "get": {
                 "description": "Get the feed for the user with the auth token",
@@ -791,6 +832,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
                 },
                 "username": {
                     "type": "string"

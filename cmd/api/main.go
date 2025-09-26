@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/joho/godotenv"
 	"github.com/tiskae/go-social/internal/db"
 	"github.com/tiskae/go-social/internal/env"
@@ -53,6 +55,9 @@ func main() {
 		},
 		env:     env.GetString("ENV", "development"),
 		version: VERSION,
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3,
+		},
 	}
 
 	// Database

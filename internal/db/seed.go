@@ -3,6 +3,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"math/rand"
 	"strconv"
@@ -108,15 +109,19 @@ const (
 	CommentsCount = 500
 )
 
-func Seed(store store.Storage) error {
+func Seed(store store.Storage, db *sql.DB) error {
 	ctx := context.Background()
 
 	users := generateUsers(UsersCount)
+	tx, _ := db.BeginTx(ctx, nil)
 	for i := range UsersCount {
-		if err := store.Users.Create(ctx, users[i]); err != nil {
+		if err := store.Users.Create(ctx, tx, users[i]); err != nil {
+			_ = tx.Rollback()
 			return err
 		}
 	}
+
+	tx.Commit()
 
 	posts := generatePosts(200)
 	for i := range PostsCount {
