@@ -14,6 +14,36 @@ type UserContextKey string
 
 const userKey UserContextKey = "user"
 
+// ActivateUser godoc
+//
+//	@Summary		Activate/Register a user
+//	@Description	Activate/Register a user by invitation toke
+//	@Tags			users
+//	@Produce		json
+//	@Param			token	path		string	true	"Invitation token"
+//	@Success		204		{string}	string	"User activated"
+//	@Failure		404		{string}	error
+//	@Failure		500		{string}	error
+//	@Router			/users/activate/{token} [put]
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+
+	err := app.store.Users.Activate(r.Context(), token)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.badRequestError(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
 // GetUserByID godoc
 //
 //	@Summary		Fetches a user profile

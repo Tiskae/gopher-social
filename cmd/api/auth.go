@@ -53,6 +53,8 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	plainToken := uuid.New().String()
 
+	app.logger.Infof("token", plainToken)
+
 	// store
 	hash := sha256.Sum256([]byte(plainToken))
 	hashToken := hex.EncodeToString(hash[:])
