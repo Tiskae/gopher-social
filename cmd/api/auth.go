@@ -81,7 +81,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		Username:      user.Username,
 		ActivationURL: activationURL,
 	}
-	err = app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, !isProdEnv, templateData)
+	statusCode, err := app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, !isProdEnv, templateData)
 
 	if err != nil {
 		app.logger.Errorw("error sending welcome email", "error", err)
@@ -94,6 +94,8 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		app.internalServerError(w, r, err)
 		return
 	}
+
+	app.logger.Infof("mail sent successfully with status code: %d", statusCode)
 
 	if err := writeJSON(w, http.StatusCreated, user); err != nil {
 		app.internalServerError(w, r, err)
