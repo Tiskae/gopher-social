@@ -6,10 +6,10 @@ import "embed"
 const (
 	FromName            = "GopherSocial"
 	MaxRetries          = 3
-	UserWelcomeTemplate = "user_invitation.tmpl"
+	UserWelcomeTemplate = "/user_invitation.tmpl"
 )
 
-//go:embed "templates"
+//go:embed templates
 var FS embed.FS
 
 type Client interface {

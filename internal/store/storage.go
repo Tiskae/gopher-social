@@ -28,6 +28,7 @@ type Storage struct {
 		GetByID(ctx context.Context, userID int64) (User, error)
 		Create(ctx context.Context, tx *sql.Tx, user *User) error
 		CreateAndInvite(ctx context.Context, user *User, token string, exp time.Duration) error
+		Delete(ctx context.Context, userID int64) error
 	}
 	Comments interface {
 		Create(ctx context.Context, comment *Comment) error

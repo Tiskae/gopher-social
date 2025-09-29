@@ -32,7 +32,7 @@ func (m *SendGridMailer) Send(templateFile, username, email string, isSandbox bo
 	to := mail.NewEmail(username, email)
 
 	// Template parsing logic
-	tmpl, err := template.ParseFS(FS, "/templates"+templateFile)
+	tmpl, err := template.ParseFS(FS, "templates"+templateFile)
 	if err != nil {
 		return err
 	}

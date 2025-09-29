@@ -23,12 +23,13 @@ type application struct {
 }
 
 type config struct {
-	addr    string
-	apiURL  string
-	db      dbConfig
-	env     string
-	version string
-	mail    mailConfig
+	addr        string
+	apiURL      string
+	db          dbConfig
+	env         string
+	version     string
+	mail        mailConfig
+	frontendURL string
 }
 
 type sendgridConfig struct {

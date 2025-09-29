@@ -58,11 +58,12 @@ func main() {
 		version: VERSION,
 		mail: mailConfig{
 			exp:       time.Hour * 24 * 3,
-			fromEmail: env.GetString("FROM_EMAIL", ""),
+			fromEmail: env.GetString("FROM_EMAIL", "info@gophersocial.com"),
 			sendgrid: sendgridConfig{
 				apiKey: env.GetString("SENDGRID_API_KEY", ""),
 			},
 		},
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
 	}
 
 	// Database
