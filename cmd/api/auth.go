@@ -3,9 +3,11 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/tiskae/go-social/internal/mailer"
 	"github.com/tiskae/go-social/internal/store"
 )
 
@@ -53,8 +55,6 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	plainToken := uuid.New().String()
 
-	app.logger.Infof("token", plainToken)
-
 	// store
 	hash := sha256.Sum256([]byte(plainToken))
 	hashToken := hex.EncodeToString(hash[:])
@@ -70,6 +70,28 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		default:
 			app.internalServerError(w, r, err)
 		}
+		return
+	}
+
+	isProdEnv := app.config.env == "production"
+
+	// send mail
+	activationURL := fmt.Sprintf("%s/users/activate/%s", app.config.frontendURL, plainToken)
+	templateData := struct{ Username, ActivationURL string }{
+		Username:      user.Username,
+		ActivationURL: activationURL,
+	}
+	err = app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, !isProdEnv, templateData)
+
+	if err != nil {
+		app.logger.Errorw("error sending welcome email", "error", err)
+
+		// rollback user creation if email fails (SAGA pattern)
+		if err := app.store.Users.Delete(r.Context(), user.ID); err != nil {
+			app.logger.Errorw("error deleting user", "error", err)
+		}
+
+		app.internalServerError(w, r, err)
 		return
 	}
 

@@ -1,3 +1,4 @@
+// Package env for managing env variables
 package env
 
 import (
