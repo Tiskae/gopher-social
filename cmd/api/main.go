@@ -6,6 +6,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/tiskae/go-social/internal/db"
 	"github.com/tiskae/go-social/internal/env"
+	"github.com/tiskae/go-social/internal/mailer"
 	"github.com/tiskae/go-social/internal/store"
 	"go.uber.org/zap"
 )
@@ -56,7 +57,11 @@ func main() {
 		env:     env.GetString("ENV", "development"),
 		version: VERSION,
 		mail: mailConfig{
-			exp: time.Hour * 24 * 3,
+			exp:       time.Hour * 24 * 3,
+			fromEmail: env.GetString("FROM_EMAIL", ""),
+			sendgrid: sendgridConfig{
+				apiKey: env.GetString("SENDGRID_API_KEY", ""),
+			},
 		},
 	}
 
@@ -77,10 +82,13 @@ func main() {
 
 	storage := store.NewStorage(db)
 
+	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apiKey, cfg.mail.fromEmail)
+
 	application := application{
 		config: cfg,
 		store:  storage,
 		logger: logger,
+		mailer: mailer,
 	}
 
 	mux := application.mount()
