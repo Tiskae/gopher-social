@@ -64,6 +64,12 @@ func main() {
 			},
 		},
 		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
+		auth: authConfig{
+			basic: basicConfig{
+				username: env.GetString("BASIC_AUTH_USERNAME", "admin"),
+				password: env.GetString("BASIC_AUTH_PASSWORD", "123"),
+			},
+		},
 	}
 
 	// Database
