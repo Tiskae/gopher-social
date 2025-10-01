@@ -39,13 +39,13 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	var payload CreatePostPayload
 
 	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
 	err := Validate.Struct(payload)
 	if err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
@@ -60,12 +60,12 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	ctx := r.Context()
 
 	if err := app.store.Posts.Create(ctx, &post); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 		return
 	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, post); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 		return
 	}
 }
@@ -87,12 +87,12 @@ func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Reques
 
 	// handling absent post from ctx
 	if post == nil {
-		app.internalServerError(w, r, errors.New("post not fetched"))
+		app.internalServerErrorResponse(w, r, errors.New("post not fetched"))
 		return
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 }
 
@@ -113,7 +113,7 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 
 	// handling invalid or empty postID
 	if err != nil {
-		app.badRequestError(w, r, errors.New("post id is required as a valid integer"))
+		app.badRequestErrorResponse(w, r, errors.New("post id is required as a valid integer"))
 		return
 	}
 
@@ -123,17 +123,17 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrNotFound):
-			app.notFoundError(w, r, err) // post not found, so nothing was deleted
+			app.notFoundErrorResponse(w, r, err) // post not found, so nothing was deleted
 			return
 		default:
-			app.internalServerError(w, r, err)
+			app.internalServerErrorResponse(w, r, err)
 			return
 		}
 	}
 
 	if err = app.jsonResponse(w, http.StatusOK, map[string]string{"message": "post deleted successfully!"}); err != nil {
 		// handling failed JSON write
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 }
 
@@ -164,7 +164,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 
 	// handling invalid or empty postID
 	if err != nil {
-		app.badRequestError(w, r, errors.New("post id is required as a valid integer"))
+		app.badRequestErrorResponse(w, r, errors.New("post id is required as a valid integer"))
 		return
 	}
 
@@ -172,7 +172,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 
 	// handling failed post fetch from ctx
 	if post == nil {
-		app.internalServerError(w, r, errors.New("post not fetched"))
+		app.internalServerErrorResponse(w, r, errors.New("post not fetched"))
 		return
 	}
 
@@ -182,7 +182,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 
 	// handling bad payload
 	if err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
@@ -190,7 +190,7 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 
 	// handling payload validation error
 	if err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 	}
 
 	if payload.Title != nil {
@@ -209,17 +209,17 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrNotFound):
-			app.notFoundError(w, r, err)
+			app.notFoundErrorResponse(w, r, err)
 			return
 		default:
-			app.internalServerError(w, r, err)
+			app.internalServerErrorResponse(w, r, err)
 			return
 		}
 	}
 
 	if err = app.jsonResponse(w, http.StatusOK, post); err != nil {
 		// handling failed JSON write
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 }
 
@@ -235,7 +235,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 
 		// handling invalid of missing postID
 		if err != nil {
-			app.badRequestError(w, r, errors.New("post id is required as a valid integer"))
+			app.badRequestErrorResponse(w, r, errors.New("post id is required as a valid integer"))
 			return
 		}
 
@@ -244,9 +244,9 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, store.ErrNotFound): // post not found
-				app.notFoundError(w, r, err)
+				app.notFoundErrorResponse(w, r, err)
 			default:
-				app.internalServerError(w, r, err) // other error
+				app.internalServerErrorResponse(w, r, err) // other error
 			}
 			return
 		}
@@ -254,7 +254,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 		comments, err := app.store.Comments.GetByPostID(r.Context(), postID)
 
 		if err != nil {
-			app.internalServerError(w, r, err)
+			app.internalServerErrorResponse(w, r, err)
 			return
 		}
 

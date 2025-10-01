@@ -32,15 +32,15 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
-			app.badRequestError(w, r, err)
+			app.badRequestErrorResponse(w, r, err)
 		default:
-			app.internalServerError(w, r, err)
+			app.internalServerErrorResponse(w, r, err)
 		}
 		return
 	}
 
 	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 }
 
@@ -60,7 +60,7 @@ func (app *application) getUserByIDHandler(w http.ResponseWriter, r *http.Reques
 	user := getUserFromContext(r)
 
 	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 }
 
@@ -87,12 +87,12 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	// TODO: revert to auth userID later
 	var payload FollowPayload
 	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
 	if err := Validate.Struct(payload); err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
@@ -101,19 +101,19 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		switch err {
 		case store.ErrConflict:
-			app.conflictError(w, r, err)
+			app.conflictErrorResponse(w, r, err)
 			return
 		case store.ErrNotFound:
-			app.notFoundError(w, r, err)
+			app.notFoundErrorResponse(w, r, err)
 			return
 		default:
-			app.internalServerError(w, r, err)
+			app.internalServerErrorResponse(w, r, err)
 			return
 		}
 	}
 
 	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 }
 
@@ -136,12 +136,12 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 	// TODO: revert to auth userID later
 	var payload FollowPayload
 	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
 	if err := Validate.Struct(payload); err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
@@ -149,16 +149,16 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
-			app.notFoundError(w, r, err)
+			app.notFoundErrorResponse(w, r, err)
 			return
 		default:
-			app.internalServerError(w, r, err)
+			app.internalServerErrorResponse(w, r, err)
 			return
 		}
 	}
 
 	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 }
 
@@ -168,7 +168,7 @@ func (app *application) userContextMiddleware(next http.Handler) http.Handler {
 
 		// handling invalid or empty userID URL param
 		if err != nil {
-			app.badRequestError(w, r, errors.New("user id must be a valid integer"))
+			app.badRequestErrorResponse(w, r, errors.New("user id must be a valid integer"))
 			return
 		}
 
@@ -178,10 +178,10 @@ func (app *application) userContextMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, store.ErrNotFound):
-				app.notFoundError(w, r, err)
+				app.notFoundErrorResponse(w, r, err)
 				return
 			default:
-				app.internalServerError(w, r, err)
+				app.internalServerErrorResponse(w, r, err)
 				return
 			}
 		}

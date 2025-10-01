@@ -31,14 +31,14 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 
 	fq, err := fq.Parse(r)
 	if err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
 	err = Validate.Struct(fq)
 
 	if err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
@@ -47,11 +47,11 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 	feed, err := app.store.Posts.GetUserFeed(ctx, int64(99), fq) // TODO: replace with authctd userID
 
 	if err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 		return
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, feed); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 }
