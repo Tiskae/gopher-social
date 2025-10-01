@@ -32,14 +32,14 @@ func (app *application) createPostCommentHandler(w http.ResponseWriter, r *http.
 
 	// handling invalid or empty post id
 	if err != nil {
-		app.badRequestError(w, r, errors.New("post id is required as a valid integer"))
+		app.badRequestErrorResponse(w, r, errors.New("post id is required as a valid integer"))
 		return
 	}
 
 	var payload CreateCommentPayload
 	// parsing payload and handling error if any
 	if err = readJSON(w, r, &payload); err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (app *application) createPostCommentHandler(w http.ResponseWriter, r *http.
 
 	// handling failed payload validation
 	if err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
@@ -61,12 +61,12 @@ func (app *application) createPostCommentHandler(w http.ResponseWriter, r *http.
 
 	// handling failed comment creation on DB
 	if err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 		return
 	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, comment); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 
 }
@@ -87,7 +87,7 @@ func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *htt
 	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 
 	if err != nil {
-		app.badRequestError(w, r, err)
+		app.badRequestErrorResponse(w, r, err)
 		return
 	}
 
@@ -96,15 +96,15 @@ func (app *application) getCommentsByPostIDHandler(w http.ResponseWriter, r *htt
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrNotFound):
-			app.notFoundError(w, r, err)
+			app.notFoundErrorResponse(w, r, err)
 			return
 		default:
-			app.internalServerError(w, r, err)
+			app.internalServerErrorResponse(w, r, err)
 			return
 		}
 	}
 
 	if err = app.jsonResponse(w, http.StatusOK, comments); err != nil {
-		app.internalServerError(w, r, err)
+		app.internalServerErrorResponse(w, r, err)
 	}
 }
