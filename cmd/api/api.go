@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/tiskae/go-social/docs" // This is required to generate Swagger docs
+	"github.com/tiskae/go-social/internal/auth"
 	"github.com/tiskae/go-social/internal/mailer"
 	"github.com/tiskae/go-social/internal/store"
 	"go.uber.org/zap"
@@ -16,10 +17,11 @@ import (
 )
 
 type application struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -35,11 +37,18 @@ type config struct {
 
 type authConfig struct {
 	basic basicConfig
+	token tokenConfig
 }
 
 type basicConfig struct {
 	username string
 	password string
+}
+
+type tokenConfig struct {
+	secret string
+	expiry time.Duration
+	issuer string
 }
 
 type sendgridConfig struct {
@@ -116,6 +125,7 @@ func (app *application) mount() http.Handler {
 		// Public routes
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
 	})
 
