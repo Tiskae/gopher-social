@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/tiskae/go-social/internal/auth"
 	"github.com/tiskae/go-social/internal/db"
 	"github.com/tiskae/go-social/internal/env"
 	"github.com/tiskae/go-social/internal/mailer"
@@ -69,6 +70,11 @@ func main() {
 				username: env.GetString("BASIC_AUTH_USERNAME", "admin"),
 				password: env.GetString("BASIC_AUTH_PASSWORD", "123"),
 			},
+			token: tokenConfig{
+				secret: env.GetString("JWT_AUTH_TOKEN", "example"),
+				expiry: time.Hour * 24 * 3, // 3 days
+				issuer: "gophersocial",
+			},
 		},
 	}
 
@@ -91,11 +97,14 @@ func main() {
 
 	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apiKey, cfg.mail.fromEmail)
 
+	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.issuer, cfg.auth.token.issuer)
+
 	application := application{
-		config: cfg,
-		store:  storage,
-		logger: logger,
-		mailer: mailer,
+		config:        cfg,
+		store:         storage,
+		logger:        logger,
+		mailer:        mailer,
+		authenticator: jwtAuthenticator,
 	}
 
 	mux := application.mount()

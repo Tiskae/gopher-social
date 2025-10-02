@@ -5,7 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/tiskae/go-social/internal/mailer"
 	"github.com/tiskae/go-social/internal/store"
@@ -98,6 +100,74 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	app.logger.Infof("mail sent successfully with status code: %d", statusCode)
 
 	if err := writeJSON(w, http.StatusCreated, user); err != nil {
+		app.internalServerErrorResponse(w, r, err)
+	}
+}
+
+type CreateUserTokenPayload struct {
+	Username string `json:"username" validate:"required,max=255"`
+	Password string `json:"password" validate:"required,max=72"`
+}
+
+// CreateToken godoc
+//
+//	@Summary		Createss a token
+//	@Description	Creates a token for a user
+//	@Tags			authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		CreateUserTokenPayload	true	"User credentials"
+//	@Success		201		{string}	string					"Token"
+//	@Failure		400		{object}	error
+//	@Failure		401		{object}	error
+//	@Failure		500		{object}	error	"Internal server error"
+//	@Router			/authentication/token [post]
+func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Request) {
+	// parse payload credentials
+	var payload CreateUserTokenPayload
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestErrorResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestErrorResponse(w, r, err)
+		return
+	}
+
+	// fetch the user (check if the user exists) from the payload
+	user, err := app.store.Users.GetByUsername(r.Context(), payload.Username)
+
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.unauthorizedErrorResponse(w, r, err)
+		default:
+			app.internalServerErrorResponse(w, r, err)
+		}
+
+		return
+	}
+
+	// generate the token -> add claims
+	claims := jwt.MapClaims{
+		"sub": user.ID,
+		"exp": time.Now().Add(app.config.auth.token.expiry).Unix(),
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
+		"iss": app.config.auth.token.issuer,
+		"aud": app.config.auth.token.issuer,
+	}
+	token, err := app.authenticator.GenerateToken(claims)
+
+	if err != nil {
+		app.internalServerErrorResponse(w, r, err)
+		return
+	}
+
+	// send it to the client
+	if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
 		app.internalServerErrorResponse(w, r, err)
 	}
 }

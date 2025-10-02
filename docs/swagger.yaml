@@ -1,5 +1,17 @@
 basePath: /v1
 definitions:
+  main.CreateUserTokenPayload:
+    properties:
+      password:
+        maxLength: 72
+        type: string
+      username:
+        maxLength: 255
+        type: string
+    required:
+    - password
+    - username
+    type: object
   main.RegisterUserPayload:
     properties:
       email:
@@ -114,6 +126,37 @@ info:
   title: GopherSocial  API
   version: "1.0"
 paths:
+  /authentication/token:
+    post:
+      consumes:
+      - application/json
+      description: Creates a token for a user
+      parameters:
+      - description: User credentials
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreateUserTokenPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Token
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Createss a token
+      tags:
+      - authentication
   /authentication/user:
     post:
       consumes:
