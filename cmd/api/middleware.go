@@ -96,7 +96,7 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		newCtx := context.WithValue(ctx, userKey, user)
+		newCtx := context.WithValue(ctx, userKey, &user)
 
 		next.ServeHTTP(w, r.WithContext(newCtx))
 	})

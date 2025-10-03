@@ -650,17 +650,6 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Follow a user",
-                "parameters": [
-                    {
-                        "description": "ID of the user to follow",
-                        "name": "user_id",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
                 "responses": {
                     "204": {
                         "description": "User followed successfully",
