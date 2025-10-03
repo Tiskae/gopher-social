@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -57,15 +56,31 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 //	@Failure		500	{string}	error	"Internal server error"
 //	@Router			/users/{id} [get]
 func (app *application) getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
-	user := getUserFromContext(r)
+	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+
+	// handling invalid or empty userID URL param
+	if err != nil {
+		app.badRequestErrorResponse(w, r, errors.New("user id must be a valid integer"))
+		return
+	}
+
+	user, err := app.store.Users.GetByID(r.Context(), userID)
+
+	// handling DB query errors
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrNotFound):
+			app.notFoundErrorResponse(w, r, err)
+			return
+		default:
+			app.internalServerErrorResponse(w, r, err)
+			return
+		}
+	}
 
 	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
 		app.internalServerErrorResponse(w, r, err)
 	}
-}
-
-type FollowPayload struct {
-	UserID int64 `json:"user_id" validate:"required"`
 }
 
 // FollowUser godoc
@@ -75,28 +90,23 @@ type FollowPayload struct {
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			user_id	body		int		true	"ID of the user to follow"
-//	@Success		204		{nil}		nil		"User followed successfully"
-//	@Failure		400		{string}	error	"Invalid user ID"
-//	@Failure		404		{string}	error	"User not found"
-//	@Failure		500		{string}	error	"Internal server error"
+//	@Success		204	{nil}		nil		"User followed successfully"
+//	@Failure		400	{string}	error	"Invalid user ID"
+//	@Failure		404	{string}	error	"User not found"
+//	@Failure		500	{string}	error	"Internal server error"
 //	@Router			/users/{user_id}/follow [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
-	userToFollow := getUserFromContext(r)
+	followerID := getUserFromContext(r).ID
 
-	// TODO: revert to auth userID later
-	var payload FollowPayload
-	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequestErrorResponse(w, r, err)
+	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+
+	// handling invalid or empty userID URL param
+	if err != nil {
+		app.badRequestErrorResponse(w, r, errors.New("user id must be a valid integer"))
 		return
 	}
 
-	if err := Validate.Struct(payload); err != nil {
-		app.badRequestErrorResponse(w, r, err)
-		return
-	}
-
-	err := app.store.Followers.Follow(r.Context(), userToFollow.ID, payload.UserID)
+	err = app.store.Followers.Follow(r.Context(), followerID, userID)
 
 	if err != nil {
 		switch err {
@@ -131,21 +141,15 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Failure		500		{string}	error	"Internal server error"
 //	@Router			/users/{user_id}/unfollow [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	userToUnfollow := getUserFromContext(r)
+	followerID := getUserFromContext(r).ID
 
-	// TODO: revert to auth userID later
-	var payload FollowPayload
-	if err := readJSON(w, r, &payload); err != nil {
-		app.badRequestErrorResponse(w, r, err)
+	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
+		app.badRequestErrorResponse(w, r, errors.New("user id must be a valid integer"))
 		return
 	}
 
-	if err := Validate.Struct(payload); err != nil {
-		app.badRequestErrorResponse(w, r, err)
-		return
-	}
-
-	err := app.store.Followers.Unfollow(r.Context(), userToUnfollow.ID, payload.UserID)
+	err = app.store.Followers.Unfollow(r.Context(), followerID, userID)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -160,37 +164,6 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
 		app.internalServerErrorResponse(w, r, err)
 	}
-}
-
-func (app *application) userContextMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
-
-		// handling invalid or empty userID URL param
-		if err != nil {
-			app.badRequestErrorResponse(w, r, errors.New("user id must be a valid integer"))
-			return
-		}
-
-		user, err := app.store.Users.GetByID(r.Context(), userID)
-
-		// handling DB query errors
-		if err != nil {
-			switch {
-			case errors.Is(err, store.ErrNotFound):
-				app.notFoundErrorResponse(w, r, err)
-				return
-			default:
-				app.internalServerErrorResponse(w, r, err)
-				return
-			}
-		}
-
-		// injecting fetched user into the request context
-		newCtx := context.WithValue(r.Context(), userKey, &user)
-
-		next.ServeHTTP(w, r.WithContext(newCtx))
-	})
 }
 
 func getUserFromContext(r *http.Request) *store.User {

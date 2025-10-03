@@ -467,13 +467,6 @@ paths:
       consumes:
       - application/json
       description: Follow a user with the ID provided
-      parameters:
-      - description: ID of the user to follow
-        in: body
-        name: user_id
-        required: true
-        schema:
-          type: integer
       produces:
       - application/json
       responses:
