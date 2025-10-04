@@ -29,7 +29,7 @@ func (app *application) BasicAuthenticationMiddleware() func(http.Handler) http.
 				return
 			}
 
-			// decode it
+			// decode the token
 			decoded, err := base64.StdEncoding.DecodeString(parts[1])
 			if err != nil {
 				app.unauthorizedBasicErrorResponse(w, r, err)
