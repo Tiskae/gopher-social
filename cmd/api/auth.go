@@ -77,6 +77,8 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	isProdEnv := app.config.env == "production"
 
+	app.logger.Infof("token", plainToken)
+
 	// send mail
 	activationURL := fmt.Sprintf("%s/users/activate/%s", app.config.frontendURL, plainToken)
 	templateData := struct{ Username, ActivationURL string }{
@@ -147,6 +149,13 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 			app.internalServerErrorResponse(w, r, err)
 		}
 
+		return
+	}
+
+	// compare password and hash
+	err = user.Password.CompareHash(payload.Password)
+	if err != nil {
+		app.unauthorizedErrorResponse(w, r, err)
 		return
 	}
 
