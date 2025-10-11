@@ -38,6 +38,12 @@ func (p *Password) Set(value string) error {
 	return nil
 }
 
+func (p *Password) CompareHash(plainPassword string) error {
+	err := bcrypt.CompareHashAndPassword(p.hash, []byte(plainPassword))
+
+	return err
+}
+
 type UserStore struct {
 	db *sql.DB
 }
