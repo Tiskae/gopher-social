@@ -96,8 +96,8 @@ func (app *application) mount() http.Handler {
 			r.Route("/{postID}", func(r chi.Router) {
 				r.Use(app.postsContextMiddleware) // excluded for /comments route internally
 				r.Get("/", app.getPostByIDHandler)
-				r.Delete("/", app.deletePostHandler)
-				r.Patch("/", app.updatePostHandler)
+				r.Delete("/", app.checkPostOwnership("admin", app.deletePostHandler))
+				r.Patch("/", app.checkPostOwnership("moderator", app.updatePostHandler))
 
 				r.Route("/comments", func(r chi.Router) {
 					r.Get("/", app.getCommentsByPostIDHandler)
