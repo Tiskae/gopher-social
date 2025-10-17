@@ -151,6 +151,7 @@ func generateUsers(num int) []*store.User {
 		newUser := &store.User{
 			Username: usernamesData[rndIdx] + strconv.Itoa(i),
 			Email:    usernamesData[rndIdx] + strconv.Itoa(i) + "@example.com",
+			Role:     store.Role{Name: "user"},
 		}
 
 		newUser.Password.Set("123123")

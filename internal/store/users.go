@@ -18,6 +18,8 @@ type User struct {
 	Password  Password `json:"-"`
 	CreatedAt string   `json:"created_at,omitempty"`
 	IsActive  bool     `json:"is_active,omitempty"`
+	RoleID    int      `json:"role_id"`
+	Role      Role     `json:"role"`
 }
 
 type Password struct {
@@ -50,16 +52,23 @@ type UserStore struct {
 
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	query := `
-		INSERT INTO users (username, email, password)
-		VALUES ($1, $2, $3) RETURNING id, created_at
+		INSERT INTO users (username, email, password, role_id)
+		VALUES ($1, $2, $3, (SELECT id FROM roles WHERE name = $4)) RETURNING id, created_at, role_id
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	role := user.Role.Name
+	if role == "" {
+		role = "user"
+	}
+
 	err := s.db.
-		QueryRowContext(ctx, query, user.Username, user.Email, user.Password.hash).
-		Scan(&user.ID, &user.CreatedAt)
+		QueryRowContext(ctx, query, user.Username, user.Email, user.Password.hash, role).
+		Scan(&user.ID, &user.CreatedAt, &user.RoleID)
+
+	user.Role.ID = user.RoleID
 
 	if err != nil {
 		switch {
@@ -77,8 +86,9 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 
 func (s *UserStore) GetByID(ctx context.Context, userID int64) (User, error) {
 	query := `
-		SELECT id, username, email, password, created_at FROM users
-		WHERE id = $1 AND is_active = true
+		SELECT u.id, u.username, u.email, u.password, u.created_at, r.id, r.name, r.level FROM users u
+		JOIN roles r ON r.id = u.role_id
+		WHERE u.id = $1 AND is_active = true
 	`
 
 	user := User{}
@@ -91,7 +101,10 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (User, error) {
 		&user.Username,
 		&user.Email,
 		&user.Password.hash,
-		&user.CreatedAt)
+		&user.CreatedAt,
+		&user.Role.ID,
+		&user.Role.Name,
+		&user.Role.Level)
 
 	if err != nil {
 		switch {
@@ -107,21 +120,25 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (User, error) {
 
 func (s *UserStore) GetByUsername(ctx context.Context, username string) (User, error) {
 	query := `
-		SELECT id, username, email, password, created_at FROM users
-		WHERE username = $1 AND is_active = true
+		SELECT u.id, u.username, u.email, u.password, u.created_at, r.id, r.name, r.level FROM users u
+		JOIN roles r ON r.id = u.role_id
+		WHERE u.username = $1 AND is_active = true
 	`
+
+	user := User{}
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
-
-	user := User{}
 
 	err := s.db.QueryRowContext(ctx, query, username).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
 		&user.Password.hash,
-		&user.CreatedAt)
+		&user.CreatedAt,
+		&user.Role.ID,
+		&user.Role.Name,
+		&user.Role.Level)
 
 	if err != nil {
 		switch err {
