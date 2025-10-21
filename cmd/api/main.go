@@ -9,6 +9,7 @@ import (
 	"github.com/tiskae/go-social/internal/env"
 	"github.com/tiskae/go-social/internal/mailer"
 	"github.com/tiskae/go-social/internal/store"
+	"github.com/tiskae/go-social/internal/store/cache"
 	"go.uber.org/zap"
 )
 
@@ -55,6 +56,12 @@ func main() {
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
+		redisCfg: redisConfig{
+			addr:    env.GetString("REDIS_ADDR", "localhost:6379"),
+			pw:      env.GetString("REDIS_PW", ""),
+			db:      env.GetInt("REDIS_DB", 0),
+			enabled: env.GetBool("REDIS_ENABLED", false),
+		},
 		env:     env.GetString("ENV", "development"),
 		version: VERSION,
 		mail: mailConfig{
@@ -92,6 +99,8 @@ func main() {
 
 	defer db.Close()
 	logger.Info("database has connected")
+
+	cache := cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
 
 	storage := store.NewStorage(db)
 
