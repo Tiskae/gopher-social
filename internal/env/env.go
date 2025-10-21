@@ -30,3 +30,18 @@ func GetInt(envKey string, defaultVal int) int {
 
 	return intValue
 }
+
+func GetBool(envKey string, defaultVal bool) bool {
+	value, exists := os.LookupEnv(envKey)
+
+	if !exists || value == "" {
+		return defaultVal
+	}
+
+	boolValue, err := strconv.ParseBool(value)
+	if err != nil {
+		return defaultVal
+	}
+
+	return boolValue
+}
