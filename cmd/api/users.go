@@ -64,7 +64,9 @@ func (app *application) getUserByIDHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	user, err := app.store.Users.GetByID(r.Context(), userID)
+	ctx := r.Context()
+
+	user, err := app.getUser(ctx, userID)
 
 	// handling DB query errors
 	if err != nil {

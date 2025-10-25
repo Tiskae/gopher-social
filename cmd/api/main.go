@@ -100,9 +100,9 @@ func main() {
 	defer db.Close()
 	logger.Info("database has connected")
 
-	cache := cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
-
 	storage := store.NewStorage(db)
+	redisClient := cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+	cacheStorage := cache.NewRedisStorage(redisClient)
 
 	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apiKey, cfg.mail.fromEmail)
 
@@ -111,6 +111,7 @@ func main() {
 	application := application{
 		config:        cfg,
 		store:         storage,
+		cacheStorage:  cacheStorage,
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,

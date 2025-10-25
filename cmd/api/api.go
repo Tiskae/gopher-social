@@ -11,6 +11,7 @@ import (
 	"github.com/tiskae/go-social/internal/auth"
 	"github.com/tiskae/go-social/internal/mailer"
 	"github.com/tiskae/go-social/internal/store"
+	"github.com/tiskae/go-social/internal/store/cache"
 	"go.uber.org/zap"
 
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -19,6 +20,7 @@ import (
 type application struct {
 	config        config
 	store         store.Storage
+	cacheStorage  cache.Storage
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
