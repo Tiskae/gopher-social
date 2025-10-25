@@ -84,7 +84,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	return nil
 }
 
-func (s *UserStore) GetByID(ctx context.Context, userID int64) (User, error) {
+func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 	query := `
 		SELECT u.id, u.username, u.email, u.password, u.created_at, r.id, r.name, r.level FROM users u
 		JOIN roles r ON r.id = u.role_id
@@ -109,16 +109,16 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (User, error) {
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return user, ErrNotFound
+			return &user, ErrNotFound
 		default:
-			return user, err
+			return &user, err
 		}
 	}
 
-	return user, nil
+	return &user, nil
 }
 
-func (s *UserStore) GetByUsername(ctx context.Context, username string) (User, error) {
+func (s *UserStore) GetByUsername(ctx context.Context, username string) (*User, error) {
 	query := `
 		SELECT u.id, u.username, u.email, u.password, u.created_at, r.id, r.name, r.level FROM users u
 		JOIN roles r ON r.id = u.role_id
@@ -143,13 +143,13 @@ func (s *UserStore) GetByUsername(ctx context.Context, username string) (User, e
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			return user, ErrNotFound
+			return &user, ErrNotFound
 		default:
-			return user, err
+			return &user, err
 		}
 	}
 
-	return user, nil
+	return &user, nil
 }
 
 func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) error {
