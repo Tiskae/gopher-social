@@ -42,6 +42,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
+	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

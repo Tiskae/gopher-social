@@ -8,6 +8,7 @@ import (
 	"github.com/tiskae/go-social/internal/db"
 	"github.com/tiskae/go-social/internal/env"
 	"github.com/tiskae/go-social/internal/mailer"
+	"github.com/tiskae/go-social/internal/ratelimiter"
 	"github.com/tiskae/go-social/internal/store"
 	"github.com/tiskae/go-social/internal/store/cache"
 	"go.uber.org/zap"
@@ -83,6 +84,11 @@ func main() {
 				issuer: "gophersocial",
 			},
 		},
+		rateLimiter: ratelimiter.Config{
+			RequestsPerTimeFrame: env.GetInt("RATELIMITER_REQUESTS_COUNT", 20),
+			TimeFrame:            time.Second * 5,
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
+		},
 	}
 
 	// Database
@@ -100,10 +106,18 @@ func main() {
 	defer db.Close()
 	logger.Info("database has connected")
 
+	// Cache
 	storage := store.NewStorage(db)
 	redisClient := cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
 	cacheStorage := cache.NewRedisStorage(redisClient)
 
+	// Rate Limiter
+	ratelimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.rateLimiter.RequestsPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
+
+	// Mailer
 	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apiKey, cfg.mail.fromEmail)
 
 	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.issuer, cfg.auth.token.issuer)
@@ -115,6 +129,7 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
+		rateLimiter:   ratelimiter,
 	}
 
 	mux := application.mount()
