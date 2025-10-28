@@ -2,9 +2,9 @@ name: Audit
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
 pull_request:
-  branches: [main]
+  branches: ["main"]
 
 jobs:
   audit:
@@ -31,3 +31,6 @@ jobs:
 
       - name: Run staticcheck
         run: staticcheck ./...
+
+      - name: Test
+        run: go test -v ./...
