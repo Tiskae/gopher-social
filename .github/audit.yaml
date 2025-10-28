@@ -31,3 +31,6 @@ jobs:
 
       - name: Run staticcheck
         run: staticcheck ./...
+
+      - name: Test
+        run: go test -v ./...
